@@ -47,6 +47,6 @@ def atualiza_users_bd(users, db_connection):
 			values = (user.nome, user.username, user.id)
 		cursor.execute(sql, values)
 	if cursor.rowcount != 0:
-		print(cursor.rowcount + " registros foram atualizados.")
+		print(str(cursor.rowcount) + " registros foram atualizados.")
 
 	cursor.close()

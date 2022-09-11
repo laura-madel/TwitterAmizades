@@ -132,3 +132,5 @@ def pesquisar_seguidores(seguide, conexao):
 
         # Para o Twitter não bloquear, espera um tempo aleatório
         espera(segundos=random.randint(2, 60))
+
+        #! TODO: Continuar a partir da chave next_token
