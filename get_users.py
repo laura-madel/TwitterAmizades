@@ -17,44 +17,41 @@ access_token_secret = os.getenv("ACCESS_TOKEN_SECRET")
 bearer_token = os.getenv("BEARER_TOKEN")
 
 class User:
-    def __init__(self, id, nome="", username="", bio=""):
+    def __init__(self, id="", nome="", username="", bio=""):
         self.id = id
         self.nome = nome
         self.username = username
         self.bio = bio
 
-# Recebe uma string com o arroba e retorna uma string com o id (ou um vetor com os ids, se for mais de um)
-def username_para_id(users):
-
-    ids = []
-
-    url = "https://api.twitter.com/2/users/by?usernames=" + users
-    json_response = connect_to_endpoint(url)
-
-    for user in json_response["data"]:
-        ids.append(str(user["id"]))
-
-    if len(ids) == 1:
-        return ids[0]
-    return ids
-
-
-# Recebe uma string com o id e retorna um vetor de usuários (com id e bio)
-def username_para_bio(usernames):
-
-    users = []
-    usernames = ','.join(usernames)
-
-    url = "https://api.twitter.com/2/users/by?usernames=" + usernames + "&user.fields=id,username,description"
-    json_response = connect_to_endpoint(url)
-
-    for user in json_response["data"]:
-        users.append(User(id=user["id"], username=user["username"], bio=user["description"]))
+# Recebe um vetor de (User) com username e retorna um vetor de (User) com mais informações
+def pesquisa_por_usernames(users):
 
     if len(users) == 1:
-        return users[0].bio
+        return pesquisa_por_username(users[0].username)
+
+    usernames = []
+    for user in users:
+        usernames.append(user.username)
+    url = "https://api.twitter.com/2/users/by?usernames=" + ','.join(usernames) + "&user.fields=name,username,description"
+    json_response = connect_to_endpoint(url)
+
+    users.clear()
+
+    for user in json_response["data"]:
+        users.append(User(id=str(user["id"]), nome=user["name"], username=user["username"], bio=user["description"]))
+
     return users
 
+# Recebe SOMENTE UM username (String) e retorna um objeto (User) com mais informações
+def pesquisa_por_username(username):
+    url = "https://api.twitter.com/2/users/by?usernames=" + username + "&user.fields=name,username,description"
+    json_response = connect_to_endpoint(url)
+    user = json_response["data"][0]
+    return User(id=str(user["id"]), nome=user["name"], username=user["username"], bio=user["description"])
+
+# Recebe o arroba e retorna o(s) id(s)
+def username_para_id(username):
+    return pesquisa_por_username(username).id
 
 def criar_url_infos_usuarie(users):
     usernames = "usernames=" + users
@@ -89,11 +86,8 @@ def connect_to_endpoint(url):
         )
     return response.json()
 
-def registra_user_no_bd(conexao, id, username, nome, bio =""):
-    adiciona_user_bd(conexao, str(id), str(username), str(nome), str(bio))
-
 def espera(segundos):
-    while (segundos > 0):
+    while segundos > 0:
         time.sleep(1)
         print(str(segundos))
         segundos = segundos - 1
@@ -103,38 +97,38 @@ def pesquisar_usuaries(users):
     json_response = connect_to_endpoint(url)
     return json_response
 
-def levantar_bios(conexao, usernames):
+def levantar_bios(users, conexao):
+    return pesquisa_por_usernames(users)
 
-    users = username_para_bio(usernames)
-
-    for user in users:
-        adiciona_bio_bd(conexao, user.id, user.bio)
-
-def pesquisar_seguidores(conexao, seguide):
+def pesquisar_seguidores(seguide, conexao):
 
     url_base = criar_url_seguidores(seguide)
     url_pagina = url_base
-    usernames = []
+    users = []
 
-    while(True):
+    while True:
 
         # Pesquisa os seguidores, 100 por vez
         json_response = connect_to_endpoint(url_pagina)
 
         # print(json.dumps(json_response, indent=4, sort_keys=True))
 
-        # Guarda as infos dos seguidores no BD
+        # Guarda as infos dos seguidores no vetor do tipo (User)
         for item in json_response["data"]:
-            registra_user_no_bd(conexao, item["id"], item["name"], item["username"])
-            usernames.append(item["username"])
+            user = User(id=item["id"], nome=item["name"], username=item["username"])
+            users.append(user)
 
-        # Verifica se os users tem bio e coloca no BD
-        levantar_bios(conexao, usernames)
-        usernames.clear()
-
-        # Para o Twitter não bloquear, espera um tempo aleatório
-        espera(segundos=random.randint(2,60))
+        # Verifica se ês usuaries tem bio e coloca no BD, todes ês 100 de uma vez
+        users = levantar_bios(users, conexao)
+        adiciona_user_bd(users, conexao)
+        users.clear()
 
         # Atualiza o URL para a solicitação da próxima página de seguidores
-        prox_pagina = json_response["meta"]["next_token"]
-        url_pagina = url_base + "?pagination_token=" + prox_pagina
+        if 'next_token' in json_response["meta"]:
+            prox_pagina = json_response["meta"]["next_token"]
+            url_pagina = url_base + "?pagination_token=" + prox_pagina
+        else:
+            break
+
+        # Para o Twitter não bloquear, espera um tempo aleatório
+        espera(segundos=random.randint(2, 60))

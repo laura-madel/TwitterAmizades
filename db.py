@@ -23,42 +23,30 @@ def desconectar_bd(db_connection):
 	db_connection.close()
 	print("Banco de dados desconectado!")
 
-def adiciona_user_bd(db_connection, id, nome, username, bio =""):
+def adiciona_user_bd(users, db_connection):
 	cursor = db_connection.cursor()
+	for user in users:
+		sql = "INSERT IGNORE INTO users (id, nome, username, bio) VALUES (%s, %s, %s, %s)"
+		values = (user.id, user.nome, user.username, user.bio)
+		cursor.execute(sql, values)
 
-	sql = "INSERT IGNORE INTO users (id, nome, username, bio) VALUES (%s, %s, %s, %s)"
-	values = (id, nome, username, bio)
-	cursor.execute(sql, values)
-
-	if(cursor.rowcount == 0):
-		atualiza_user_bd(db_connection, id, nome, username, bio)
-	else:
-		print("o registro de " + nome + " foi inserido.")
+		if(cursor.rowcount == 0):
+			atualiza_users_bd([user], db_connection)
+		else:
+			print("o registro de " + user.nome + " foi inserido.")
 	cursor.close()
 
-def atualiza_user_bd(db_connection, id, nome, username, bio=""):
+def atualiza_users_bd(users, db_connection):
 	cursor = db_connection.cursor()
-
-	if(bio != ""):
-		sql = ("update users set bio = %s, nome = %s, username = %s where id=%s")
-		values = (bio, nome, username, id)
-	else:
-		sql = ("update users set nome = %s, username = %s where id=%s")
-		values = (nome, username, id)
-
-	cursor.execute(sql, values)
+	for user in users:
+		if(user.bio != ""):
+			sql = ("update users set bio = %s, nome = %s, username = %s where id=%s")
+			values = (user.bio, user.nome, user.username, user.id)
+		else:
+			sql = ("update users set nome = %s, username = %s where id=%s")
+			values = (user.nome, user.username, user.id)
+		cursor.execute(sql, values)
 	if cursor.rowcount != 0:
-		print("o registro de " + nome + " foi atualizado.")
-
-	cursor.close()
-
-def adiciona_bio_bd(db_connection, id, bio):
-
-	cursor = db_connection.cursor()
-	sql = ("update users set bio = %s where id=%s")
-	values = (bio, id)
-	cursor.execute(sql, values)
-	if cursor.rowcount != 0:
-		print("nova bio inserida: " + bio)
+		print(cursor.rowcount + " registros foram atualizados.")
 
 	cursor.close()
