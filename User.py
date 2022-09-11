@@ -9,3 +9,14 @@ class User:
         self.cont_seguidores = cont_seguidores
         self.cont_seguidos = cont_seguidos
         self.foto = foto
+class Pontuacao:
+    def __init__(self, user:User, pontos=0, coerencia = 0, porn = False):
+        self.user = user
+        self.pontos = pontos
+        self.coerencia = coerencia
+        self.porn = porn
+
+    def __lt__(self, other):
+        if self.pontos == other.pontos:
+            return self.coerencia < other.coerencia
+        return self.pontos < other.pontos

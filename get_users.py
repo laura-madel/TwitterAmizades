@@ -1,3 +1,4 @@
+import logging
 import os
 import random
 
@@ -192,3 +193,22 @@ def pesquisar_seguidos_com_token(id, token, conexao):
 def pesquisa_rotina(arroba, conexao):
     pesquisar_seguidores(username_para_id(arroba), conexao)
     pesquisar_seguidos(username_para_id(arroba), conexao)
+
+def alimentar_bd(users):
+    for user in users:
+        pesquisa_rotina(user.username)
+def melhores_para_pesquisar(quantidade, conexao):
+    users = baixa_user_bd(conexao)
+    pontuacoes = pontua_bios(users)
+    pontuacoes = filtra_relevantes(pontuacoes,pontuacao_min=7,filtro_porn=True,coerencia_min=0.0,pode_ja_seguidos=True)
+    users.clear()
+    for i in range(0, quantidade, 1):
+        users.append(pontuacoes[i].user)
+    return users
+def melhores_para_seguir(quantidade, conexao):
+    users = baixa_user_bd(conexao)
+    pontuacoes = pontua_bios(users)
+    pontuacoes = filtra_relevantes(pontuacoes,pontuacao_min=10,filtro_porn=True,coerencia_min=0.0,pode_ja_seguidos=False)
+    for i in range(0, quantidade, 1):
+        logging.info(i+1, "https://www.twitter.com/" + pontuacoes[i].user.username)
+    # Descobrir como mandar por email.

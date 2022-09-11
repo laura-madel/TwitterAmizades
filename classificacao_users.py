@@ -1,17 +1,13 @@
 from User import *
+import random
 
-PONTOS_CARACTERE_TRANS = 4
-PONTOS_PRONOMES = 2
-PONTOS_ARCO_IRIS = 1
+PONTOS_TRANS = 8
+PONTOS_PRONOMES = 4
+PONTOS_ARCO_IRIS = 2
+PONTOS_ESTUDANTE = 1
+
 QUANT_IDEAL_SEGUIDORES = 500
 QUANT_IDEAL_SEGUIDOS = 400
-
-class Pontuacao:
-    def __init__(self, user:User, pontos=0, incoerencia = 0):
-        self.user = user
-        self.pontos = pontos
-        self.incoerencia = incoerencia
-
 def pontua_bios(users):
 
     pontuacoes = []
@@ -21,24 +17,45 @@ def pontua_bios(users):
         pontos = 0
         incoerencia = 0
 
-        pontos += verifica_caractere_trans(user.bio, user.nome)
-        pontos += verifica_bandeira_lgbt(user.bio, user.nome)
+        pontos += verifica_trans(user.bio, user.nome)
+        pontos += verifica_lgbt(user.bio, user.nome)
         pontos += verifica_pronomes(user.bio)
-
+        pontos += verifica_estudante(user.bio, user.nome)
+        # Se a quantidade de seguidoras for pequena (mais perto do ou menor do que ideal), a proporção só importa se não seguir ninguém
         incoerencia += verifica_proporcao_seguidores(user.cont_seguidos, user.cont_seguidores)
         incoerencia += verifica_quantidade_seguidores(user.cont_seguidores)
         incoerencia += verifica_quantidade_seguidos(user.cont_seguidos)
 
-        pontuacoes.append(Pontuacao(user, pontos=pontos, incoerencia=incoerencia))
+        # Deixa a incoerencia no intervalo [0,1]
+        if incoerencia < 10.0:
+            incoerencia = incoerencia/10.0
+        else:
+            incoerencia = 1
+        incoerencia = random.random()
+
+        coerencia = 1.0 - incoerencia
+
+        porn = verifica_porn(user.bio, user.nome)
+
+        pontuacoes.append(Pontuacao(user, pontos=pontos, coerencia=coerencia, porn=porn))
 
     return pontuacoes
 
-def verifica_caractere_trans(bio, nome):
-    if "⚧" in bio or "⚧" in nome:
-        return PONTOS_CARACTERE_TRANS
+def filtra_relevantes(pontuacoes, pontuacao_min=0,filtro_porn=True,coerencia_min=0.0,pode_ja_seguidos=False):
+    pontuacoes_filtradas = []
+    for pontuacao in pontuacoes:
+        if pontuacao.pontos >= pontuacao_min and pontuacao.porn != filtro_porn and pontuacao.coerencia >= coerencia_min and (pode_ja_seguidos or pontuacao.user.eu_sigo == False):
+            pontuacoes_filtradas.append(pontuacao)
+    pontuacoes.clear()
+    pontuacoes_filtradas.sort(reverse=True)
+    return pontuacoes_filtradas
+
+def verifica_trans(bio, nome):
+    if "⚧" in bio or "⚧" in nome or "trans" in bio or "trans" in nome or "trava" in bio or "trava" in nome or "travesti" in bio or "travesti" in nome:
+        return PONTOS_TRANS
     return 0
 
-def verifica_bandeira_lgbt(bio, nome):
+def verifica_lgbt(bio, nome):
     if "🌈" in bio or "🌈" in nome:
         return PONTOS_ARCO_IRIS
     return 0
@@ -48,11 +65,20 @@ def verifica_pronomes(bio):
         return PONTOS_PRONOMES
     return 0
 
-#  DIREITO / UFPR / TRANS / TRAVA / TRAVESTI / PORN / +18 / NSFW
+def verifica_estudante(bio, nome):
+    if "direito" in bio or "direito" in nome or "UFPR" in bio or "UFPR" in nome or "⚖" in bio or "⚖" in nome or "estud" in bio or "estud" in nome:
+        return PONTOS_ESTUDANTE
+    return 0
+
+# separar Direitos humanos
+def verifica_porn(bio, nome):
+    if "porn" in bio or "porn" in nome or "+18" in bio or "+18" in nome or "NSFW" in bio or "NSFW" in nome:
+        return True
+    return False
 
 # Quanto maior esse índice maior a diferença entre seguidos e seguidores
 def verifica_proporcao_seguidores(elu_segue, elu_eh_seguide):
-    return abs(elu_segue - elu_eh_seguide) / 250.0
+    return abs(elu_segue - elu_eh_seguide) / 100.0
 
 # Quanto maior mais longe do ideal
 def verifica_quantidade_seguidores(elu_eh_seguide):

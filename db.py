@@ -27,12 +27,12 @@ def desconectar_bd(db_connection):
 def baixa_user_bd(db_connection):
 	cursor = db_connection.cursor()
 	users : User = []
-	sql = "SELECT id, nome, bio FROM users WHERE bio NOT LIKE '%🔞%' AND nome NOT LIKE '%🔞%' AND (nome LIKE '%🌈%' OR bio LIKE '%🌈%' OR nome LIKE '%⚧%' OR bio LIKE '%⚧%' OR bio LIKE '%ele%' OR bio LIKE '%ela%' OR bio LIKE '%elu%' OR bio LIKE '%pronome%'OR bio LIKE '%UFPR%' OR bio LIKE '%trans%' OR bio LIKE '%travesti%' OR bio LIKE '%trava%');"
+	sql = "SELECT id, nome, bio, username FROM users WHERE bio NOT LIKE '%🔞%' AND nome NOT LIKE '%🔞%' AND (nome LIKE '%🌈%' OR bio LIKE '%🌈%' OR nome LIKE '%⚧%' OR bio LIKE '%⚧%' OR bio LIKE '%ele%' OR bio LIKE '%ela%' OR bio LIKE '%elu%' OR bio LIKE '%pronome%'OR bio LIKE '%UFPR%' OR bio LIKE '%trans%' OR bio LIKE '%travesti%' OR bio LIKE '%trava%');"
 	cursor.execute(sql)
 
 	resultado = cursor.fetchall()
 	for user in resultado:
-		users.append(User(id=user[0],nome=user[1],bio=user[2]))
+		users.append(User(id=user[0],nome=user[1],bio=user[2],username=user[3]))
 	cursor.close()
 	return users
 def adiciona_user_bd(users, db_connection):
