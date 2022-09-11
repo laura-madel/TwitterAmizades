@@ -6,6 +6,7 @@ import json
 import time
 
 from dotenv import load_dotenv
+from db import *
 
 load_dotenv(verbose=True)  # Throws error if no .env file is found
 
@@ -15,11 +16,12 @@ access_token = os.getenv("ACCESS_TOKEN")
 access_token_secret = os.getenv("ACCESS_TOKEN_SECRET")
 bearer_token = os.getenv("BEARER_TOKEN")
 
-# APAGAR QUANDO TIVER CONECTADO COM O BD
-id_bd = []
-name_bd = []
-username_bd = []
-bio_bd = []
+class User:
+    def __init__(self, id, nome="", username="", bio=""):
+        self.id = id
+        self.nome = nome
+        self.username = username
+        self.bio = bio
 
 # Recebe uma string com o arroba e retorna uma string com o id (ou um vetor com os ids, se for mais de um)
 def username_para_id(users):
@@ -37,15 +39,30 @@ def username_para_id(users):
     return ids
 
 
+# Recebe uma string com o id e retorna um vetor de usuários (com id e bio)
+def username_para_bio(usernames):
+
+    users = []
+    usernames = ','.join(usernames)
+
+    url = "https://api.twitter.com/2/users/by?usernames=" + usernames + "&user.fields=id,username,description"
+    json_response = connect_to_endpoint(url)
+
+    for user in json_response["data"]:
+        users.append(User(id=user["id"], username=user["username"], bio=user["description"]))
+
+    if len(users) == 1:
+        return users[0].bio
+    return users
+
+
 def criar_url_infos_usuarie(users):
-    # Specify the usernames that you want to lookup below
-    # You can enter up to 100 comma-separated values.
     usernames = "usernames=" + users
-    user_fields = "user.fields=name,username,protected,description,location,url,public_metrics,verified"
     # User fields are adjustable, options include:
     # created_at, description, entities, id, location, name,
     # pinned_tweet_id, profile_image_url, protected,
     # public_metrics, url, username and verified
+    user_fields = "user.fields=name,username,protected,description,location,url,public_metrics,verified"
     url = "https://api.twitter.com/2/users/by?{}&{}".format(usernames, user_fields)
     return url
 
@@ -72,17 +89,8 @@ def connect_to_endpoint(url):
         )
     return response.json()
 
-def registra_no_bd(id, username, nome, bio = ""):
-
-    #se já existe com o mesmo id no banco de dados
-        #completa bio se não tiver
-    #se não existe
-        #adiciona as infos que tem
-
-    id_bd.append(str(id))
-    username_bd.append(str(username))
-    name_bd.append(str(nome))
-    bio_bd.append(str(bio))
+def registra_user_no_bd(conexao, id, username, nome, bio =""):
+    adiciona_user_bd(conexao, str(id), str(username), str(nome), str(bio))
 
 def espera(segundos):
     while (segundos > 0):
@@ -95,25 +103,37 @@ def pesquisar_usuaries(users):
     json_response = connect_to_endpoint(url)
     return json_response
 
-def pesquisar_seguidores(seguide):
+def levantar_bios(conexao, usernames):
+
+    users = username_para_bio(usernames)
+
+    for user in users:
+        adiciona_bio_bd(conexao, user.id, user.bio)
+
+def pesquisar_seguidores(conexao, seguide):
 
     url_base = criar_url_seguidores(seguide)
     url_pagina = url_base
-    pagina = 1
+    usernames = []
 
     while(True):
 
-        # Pesquisa e exibe os seguidores, 100 por vez
+        # Pesquisa os seguidores, 100 por vez
         json_response = connect_to_endpoint(url_pagina)
-        print(json.dumps(json_response, indent=4, sort_keys=True))
-        print("--------------------------------------------------fim da pagina " + str(pagina) + "-----------------------------------------------------")
+
+        # print(json.dumps(json_response, indent=4, sort_keys=True))
 
         # Guarda as infos dos seguidores no BD
         for item in json_response["data"]:
-            registra_no_bd(item["id"],item["name"],item["username"])
+            registra_user_no_bd(conexao, item["id"], item["name"], item["username"])
+            usernames.append(item["username"])
 
-        # Para o Twitter não bloquear, espera algum tempo aleatório
-        espera(segundos=random.randint(100,600))
+        # Verifica se os users tem bio e coloca no BD
+        levantar_bios(conexao, usernames)
+        usernames.clear()
+
+        # Para o Twitter não bloquear, espera um tempo aleatório
+        espera(segundos=random.randint(2,60))
 
         # Atualiza o URL para a solicitação da próxima página de seguidores
         prox_pagina = json_response["meta"]["next_token"]
