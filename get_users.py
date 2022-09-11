@@ -6,6 +6,7 @@ import json
 import time
 
 from dotenv import load_dotenv
+from classificacao_users import *
 from db import *
 
 load_dotenv(verbose=True)  # Throws error if no .env file is found
@@ -16,28 +17,43 @@ access_token = os.getenv("ACCESS_TOKEN")
 access_token_secret = os.getenv("ACCESS_TOKEN_SECRET")
 bearer_token = os.getenv("BEARER_TOKEN")
 
-class User:
-    def __init__(self, id="", nome="", username="", bio="", me_segue=False, eu_sigo=False, cont_seguidores=0,cont_seguidos=0):
-        self.id = id
-        self.nome = nome
-        self.username = username
-        self.bio = bio
-        self.me_segue = me_segue
-        self.eu_sigo = eu_sigo
-        self.cont_seguidores = cont_seguidores
-        self.cont_seguidos = cont_seguidos
+MEU_ID = "1279200119129341952"
 
-# Recebe um vetor de (User) com username e retorna um vetor de (User) com mais informações
-def pesquisa_por_usernames(users):
+def infos_de_interesse():
+    return "name,username,description,public_metrics,profile_image_url"
+    #     # User fields are adjustable, options include:
+    #     # created_at, description, entities, id, location, name,
+    #     # pinned_tweet_id, profile_image_url, protected,
+    #     # public_metrics, url, username and verified
 
-    if len(users) == 1:
-        return pesquisa_por_username(users[0].username)
+def cria_url_username(username):
+    return "https://api.twitter.com/2/users/by?usernames=" + username + "&user.fields=" + infos_de_interesse()
 
+def cria_url_usernames(users):
+    # TODO: não é possível que esse seja o melhor jeito!
     usernames = []
     for user in users:
         usernames.append(user.username)
+    return "https://api.twitter.com/2/users/by?usernames=" + ','.join(usernames) + "&user.fields=" + infos_de_interesse()
 
-    url = "https://api.twitter.com/2/users/by?usernames=" + ','.join(usernames) + "&user.fields=name,username,description,public_metrics"
+def criar_url_seguidores(user_id):
+    return "https://api.twitter.com/2/users/{}/followers".format(user_id)
+
+def criar_url_seguides(user_id):
+    return "https://api.twitter.com/2/users/{}/following".format(user_id)
+
+# Recebe o arroba e retorna o(s) id(s)
+def username_para_id(username):
+    return levanta_infos_user(username).id
+
+# Recebe um vetor de (User) com username e retorna um vetor de (User) com mais informações
+def levanta_infos_users(users):
+
+    if len(users) == 1:
+        return levanta_infos_user(users[0].username)
+
+
+    url = cria_url_usernames(users)
     json_response = connect_to_endpoint(url)
 
     users.clear()
@@ -50,14 +66,15 @@ def pesquisa_por_usernames(users):
         bio = user["description"]
         cont_seguidores = user["public_metrics"]["following_count"]
         cont_seguidos = user["public_metrics"]["followers_count"]
+        foto = user["profile_image_url"]
 
-        users.append(User(id=id, nome=nome, username=username, bio=bio, cont_seguidores=cont_seguidores, cont_seguidos=cont_seguidos))
+        users.append(User(id=id, nome=nome, username=username, bio=bio, cont_seguidores=cont_seguidores, cont_seguidos=cont_seguidos, foto=foto))
 
     return users
 
 # Recebe SOMENTE UM username (String) e retorna um objeto (User) com mais informações
-def pesquisa_por_username(username):
-    url = "https://api.twitter.com/2/users/by?usernames=" + username + "&user.fields=name,username,description,public_metrics"
+def levanta_infos_user(username):
+    url = cria_url_username(username)
     json_response = connect_to_endpoint(url)
     user = json_response["data"][0]
 
@@ -67,34 +84,11 @@ def pesquisa_por_username(username):
     bio = user["description"]
     cont_seguidores = user["public_metrics"]["following_count"]
     cont_seguidos = user["public_metrics"]["followers_count"]
+    foto = user["profile_image_url"]
 
-    return User(id=id, nome=nome, username=username, bio=bio, cont_seguidores=cont_seguidores, cont_seguidos=cont_seguidos)
-
-# Recebe o arroba e retorna o(s) id(s)
-def username_para_id(username):
-    return pesquisa_por_username(username).id
-
-def criar_url_infos_usuarie(users):
-    usernames = "usernames=" + users
-    # User fields are adjustable, options include:
-    # created_at, description, entities, id, location, name,
-    # pinned_tweet_id, profile_image_url, protected,
-    # public_metrics, url, username and verified
-    user_fields = "user.fields=name,username,protected,description,location,url,public_metrics,verified"
-    url = "https://api.twitter.com/2/users/by?{}&{}".format(usernames, user_fields)
-    return url
-
-def criar_url_seguidores(user_id):
-    return "https://api.twitter.com/2/users/{}/followers".format(user_id)
-
-def criar_url_seguides(user_id):
-    return "https://api.twitter.com/2/users/{}/following".format(user_id)
+    return User(id=id, nome=nome, username=username, bio=bio, cont_seguidores=cont_seguidores, cont_seguidos=cont_seguidos, foto=foto)
 
 def bearer_oauth(r):
-    """
-    Method required by bearer token authentication.
-    """
-
     r.headers["Authorization"] = f"Bearer {bearer_token}"
     r.headers["User-Agent"] = "v2UserLookupPython"
     return r
@@ -116,11 +110,6 @@ def espera(segundos):
         print(str(segundos))
         segundos = segundos - 1
 
-def pesquisar_usuaries(users):
-    url = criar_url_infos_usuarie(users)
-    json_response = connect_to_endpoint(url)
-    return json_response
-
 def adiciona_tags(users, tag):
     if tag == "marcar_como_seguido":
         for user in users:
@@ -128,52 +117,78 @@ def adiciona_tags(users, tag):
     if tag == "marcar_como_seguidor":
         for user in users:
             user.me_segue = True
+    return users
 
-# def levantar_bios(users, conexao):
-#     return pesquisa_por_usernames(users)
+def pesquisar_pagina(url, conexao, token="", tag=""):
 
-def pesquisar_com_paginas(user_id, url_base, conexao, tag = ""):
-    url_pagina = url_base
-    users = []
+    users: list[User] = []
+
+    if token != "":
+        url = url + "?pagination_token=" + token
+
+    # Pesquisa os seguidores, 100 por vez
+    json_response = connect_to_endpoint(url)
+
+    # print(json.dumps(json_response, indent=4, sort_keys=True))
+
+    # Guarda as infos dos seguidores no vetor do tipo (User)
+    for item in json_response["data"]:
+        user = User(id=item["id"], nome=item["name"], username=item["username"])
+        users.append(user)
+
+    # Verifica se ês usuaries tem bio e coloca no BD, todes ês 100 de uma vez
+    users = levanta_infos_users(users)
+    users = adiciona_tags(users, tag)
+    adiciona_user_bd(users, conexao)
+
+    users.clear()
+    # Atualiza o URL para a solicitação da próxima página de seguidores
+    if 'next_token' in json_response["meta"]:
+        return json_response["meta"]["next_token"]
+    return ""
+
+def pesquisar_com_paginas(url_base, conexao, token = "", tag = ""):
 
     while True:
-
-        # Pesquisa os seguidores, 100 por vez
-        json_response = connect_to_endpoint(url_pagina)
-
-        # print(json.dumps(json_response, indent=4, sort_keys=True))
-
-        # Guarda as infos dos seguidores no vetor do tipo (User)
-        for item in json_response["data"]:
-            user = User(id=item["id"], nome=item["name"], username=item["username"])
-            users.append(user)
-
-        # Verifica se ês usuaries tem bio e coloca no BD, todes ês 100 de uma vez
-        users = pesquisa_por_usernames(users)
-        ## TODO: juntar essas duas funções
-        users = adiciona_tags(users, tag)
-        adiciona_user_bd(users, conexao)
-        users.clear()
-
-        # Atualiza o URL para a solicitação da próxima página de seguidores
-        if 'next_token' in json_response["meta"]:
-            prox_pagina = json_response["meta"]["next_token"]
-            url_pagina = url_base + "?pagination_token=" + prox_pagina
-        else:
+        token = pesquisar_pagina(url_base, conexao, token, tag)
+        print("token: ", token)
+        if token == "":
             break
 
         # Para o Twitter não bloquear, espera um tempo aleatório
-        espera(segundos=random.randint(60*5, 60*6))
+        espera(segundos=random.randint(60*4, 60*5))
 
         #! TODO: interromper sem erro quando acaba https://developer.twitter.com/en/docs/twitter-api/rate-limits
         # Exception: Request returned an error: 429 {"title":"Too Many Requests","detail":"Too Many Requests","type":"about:blank","status":429}
-        #! TODO: Continuar a partir da chave next_token
-        #
-        #! TODO: Implementar pesquisar_seguidos() também, generalizar essa função
 
 def pesquisar_seguidores(id, conexao):
-    pesquisar_com_paginas(id, criar_url_seguidores(id), conexao, tag="marcar_como_seguidor")
+    if id == MEU_ID:
+        tag = "marcar_como_seguidor"
+    else:
+        tag = ""
+    pesquisar_com_paginas(criar_url_seguidores(id), conexao, tag=tag)
     print('pesquisa por seguidores concluida!')
 def pesquisar_seguidos(id, conexao):
-    pesquisar_com_paginas(id, criar_url_seguides(id), conexao, tag="marcar_como_seguido")
+    tag = ""
+    if id == MEU_ID:
+        tag = "marcar_como_seguido"
+    pesquisar_com_paginas(criar_url_seguides(id), conexao, tag=tag)
     print('pesquisa por seguidos concluida!')
+
+def pesquisar_seguidores_com_token(id, token, conexao):
+    if id == MEU_ID:
+        tag = "marcar_como_seguidor"
+    else:
+        tag = ""
+    pesquisar_com_paginas(criar_url_seguidores(id), conexao, token=token, tag=tag)
+    print('pesquisa por seguidores com token concluida!')
+
+def pesquisar_seguidos_com_token(id, token, conexao):
+    tag = ""
+    if id == MEU_ID:
+        tag = "marcar_como_seguido"
+    pesquisar_com_paginas(criar_url_seguides(id), conexao, token=token, tag=tag)
+    print('pesquisa por seguidos com token concluida!')
+def pesquisa_rotina(arroba, conexao):
+    pesquisar_seguidores(username_para_id(arroba), conexao)
+    pesquisar_seguidos(username_para_id(arroba), conexao)
