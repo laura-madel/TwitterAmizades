@@ -131,6 +131,7 @@ def pesquisar_seguidores(seguide, conexao):
             break
 
         # Para o Twitter não bloquear, espera um tempo aleatório
-        espera(segundos=random.randint(2, 60))
-
+        espera(segundos=random.randint(60*5, 60*6))
+        #! TODO: interromper sem erro quando acaba https://developer.twitter.com/en/docs/twitter-api/rate-limits
+        # Exception: Request returned an error: 429 {"title":"Too Many Requests","detail":"Too Many Requests","type":"about:blank","status":429}
         #! TODO: Continuar a partir da chave next_token
