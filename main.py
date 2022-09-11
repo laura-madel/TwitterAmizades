@@ -1,7 +1,12 @@
 from get_users import *
 
 if __name__ == '__main__':
+
     conexao = conectar_bd()
-    pesquisar_seguidores(username_para_id("orionczar"), conexao)
-    print('pesquisa concluida!')
+
+    arroba = "orionczar"
+
+    pesquisar_seguidores(username_para_id(arroba), conexao)
+    pesquisar_seguidos(username_para_id(arroba), conexao)
+
     desconectar_bd(conexao)
