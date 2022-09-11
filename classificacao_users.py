@@ -1,4 +1,4 @@
-from User import *
+from db import *
 import random
 
 PONTOS_TRANS = 8
@@ -44,7 +44,7 @@ def pontua_bios(users):
 def filtra_relevantes(pontuacoes, pontuacao_min=0,filtro_porn=True,coerencia_min=0.0,pode_ja_seguidos=False):
     pontuacoes_filtradas = []
     for pontuacao in pontuacoes:
-        if pontuacao.pontos >= pontuacao_min and pontuacao.porn != filtro_porn and pontuacao.coerencia >= coerencia_min and (pode_ja_seguidos or pontuacao.user.eu_sigo == False):
+        if pontuacao.pontos >= pontuacao_min and pontuacao.porn != filtro_porn and pontuacao.coerencia >= coerencia_min and ((pode_ja_seguidos and verifica_se_ja_pesquisou(pontuacao.user)) or pontuacao.user.eu_sigo == False):
             pontuacoes_filtradas.append(pontuacao)
     pontuacoes.clear()
     pontuacoes_filtradas.sort(reverse=True)

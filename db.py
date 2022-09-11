@@ -35,6 +35,27 @@ def baixa_user_bd(db_connection):
 		users.append(User(id=user[0],nome=user[1],bio=user[2],username=user[3]))
 	cursor.close()
 	return users
+
+def adiciona_pesquisade(user, db_connection):
+	cursor = db_connection.cursor()
+
+	sql = "INSERT INTO pesquisades (id, data_pesquisa) VALUES (%s, CURRENT_DATE)"
+	values = (user.id)
+	cursor.execute(sql, values)
+
+	cursor.close()
+
+def verifica_se_ja_pesquisou(user, db_connection):
+	cursor = db_connection.cursor()
+
+	sql = "SELECT id, nome, bio, username FROM pesquisades WHERE id = %s;"
+	values = (user.id)
+	cursor.execute(sql, values)
+	if cursor.rowcount > 0:
+		cursor.close()
+		return True
+	cursor.close()
+	return False
 def adiciona_user_bd(users, db_connection):
 	for user in users:
 		print(user.id, user.nome, user.username, user.bio, user.me_segue, user.eu_sigo, user.cont_seguidores, user.cont_seguidos, user.foto)

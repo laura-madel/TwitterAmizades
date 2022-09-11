@@ -197,6 +197,7 @@ def pesquisa_rotina(arroba, conexao):
 def alimentar_bd(users):
     for user in users:
         pesquisa_rotina(user.username)
+        adiciona_pesquisade(user)
 def melhores_para_pesquisar(quantidade, conexao):
     users = baixa_user_bd(conexao)
     pontuacoes = pontua_bios(users)
