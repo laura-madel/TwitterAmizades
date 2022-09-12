@@ -57,19 +57,17 @@ def verifica_se_ja_pesquisou(user, db_connection):
 	cursor.close()
 	return False
 def adiciona_user_bd(users, db_connection):
+	cursor = db_connection.cursor()
 	for user in users:
-		print(user.id, user.nome, user.username, user.bio, user.me_segue, user.eu_sigo, user.cont_seguidores, user.cont_seguidos, user.foto)
-	# cursor = db_connection.cursor()
-	# for user in users:
-	# 	sql = "INSERT IGNORE INTO users (id, nome, username, bio, me_segue, eu_sigo, cont_seguidores, cont_seguidos, foto) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
-	# 	values = (user.id, user.nome, user.username, user.bio, user.me_segue, user.eu_sigo, user.cont_seguidores, user.cont_seguidos, user.foto)
-	# 	cursor.execute(sql, values)
-	#
-	# 	if(cursor.rowcount == 0):
-	# 		atualiza_users_bd([user], db_connection)
-	# 	else:
-	# 		print("o registro de " + user.nome + " foi inserido.")
-	# cursor.close()
+		sql = "INSERT IGNORE INTO users (id, nome, username, bio, me_segue, eu_sigo, cont_seguidores, cont_seguidos, foto) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+		values = (user.id, user.nome, user.username, user.bio, user.me_segue, user.eu_sigo, user.cont_seguidores, user.cont_seguidos, user.foto)
+		cursor.execute(sql, values)
+
+		if(cursor.rowcount == 0):
+			atualiza_users_bd([user], db_connection)
+		else:
+			print("o registro de " + user.nome + " foi inserido.")
+	cursor.close()
 
 def atualiza_users_bd(users, db_connection):
 	cursor = db_connection.cursor()
