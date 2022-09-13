@@ -39,12 +39,23 @@ def pontua_bios(users):
 
         pontuacoes.append(Pontuacao(user, pontos=pontos, coerencia=coerencia, porn=porn))
 
+    pontuacoes.sort(reverse=True)
+
     return pontuacoes
 
-def filtra_relevantes(pontuacoes, pontuacao_min=0,filtro_porn=True,coerencia_min=0.0,pode_ja_seguidos=False):
+def filtra_relevantes(pontuacoes, pontuacao_min=0,filtro_porn=True,coerencia_min=0.0):
     pontuacoes_filtradas = []
     for pontuacao in pontuacoes:
-        if pontuacao.pontos >= pontuacao_min and pontuacao.porn != filtro_porn and pontuacao.coerencia >= coerencia_min and ((pode_ja_seguidos and verifica_se_ja_pesquisou(pontuacao.user)) or pontuacao.user.eu_sigo == False):
+        if pontuacao.pontos >= pontuacao_min and pontuacao.porn != filtro_porn and pontuacao.coerencia >= coerencia_min and pontuacao.user.eu_sigo == False:
+            pontuacoes_filtradas.append(pontuacao)
+    pontuacoes.clear()
+    pontuacoes_filtradas.sort(reverse=True)
+    return pontuacoes_filtradas
+
+def filtra_relevantes_para_pesquisar(pontuacoes, pesquisades, pontuacao_min=0,filtro_porn=True,coerencia_min=0.0):
+    pontuacoes_filtradas = []
+    for pontuacao in pontuacoes:
+        if pontuacao.pontos >= pontuacao_min and pontuacao.porn != filtro_porn and pontuacao.coerencia >= coerencia_min and pontuacao.user.id not in pesquisades:
             pontuacoes_filtradas.append(pontuacao)
     pontuacoes.clear()
     pontuacoes_filtradas.sort(reverse=True)
@@ -79,6 +90,9 @@ def verifica_porn(bio, nome):
 # Quanto maior esse índice maior a diferença entre seguidos e seguidores
 def verifica_proporcao_seguidores(elu_segue, elu_eh_seguide):
     return abs(elu_segue - elu_eh_seguide) / 100.0
+
+# TODO ver @eu_robertamrn e @FosterOliver_of
+# se o perfil for fechado, os contadores de seguides/seguidores são null
 
 # Quanto maior mais longe do ideal
 def verifica_quantidade_seguidores(elu_eh_seguide):

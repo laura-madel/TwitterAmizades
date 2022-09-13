@@ -21,7 +21,7 @@ bearer_token = os.getenv("BEARER_TOKEN")
 MEU_ID = "1279200119129341952"
 
 def infos_de_interesse():
-    return "name,username,description,public_metrics,profile_image_url"
+    return "name,username,description,public_metrics,profile_image_url,protected"
     #     # User fields are adjustable, options include:
     #     # created_at, description, entities, id, location, name,
     #     # pinned_tweet_id, profile_image_url, protected,
@@ -68,8 +68,9 @@ def levanta_infos_users(users):
         cont_seguidores = user["public_metrics"]["following_count"]
         cont_seguidos = user["public_metrics"]["followers_count"]
         foto = user["profile_image_url"]
+        protegido = user["protected"]
 
-        users.append(User(id=id, nome=nome, username=username, bio=bio, cont_seguidores=cont_seguidores, cont_seguidos=cont_seguidos, foto=foto))
+        users.append(User(id=id, nome=nome, username=username, bio=bio, cont_seguidores=cont_seguidores, cont_seguidos=cont_seguidos, foto=foto, protegido=protegido))
 
     return users
 
@@ -86,8 +87,9 @@ def levanta_infos_user(username):
     cont_seguidores = user["public_metrics"]["following_count"]
     cont_seguidos = user["public_metrics"]["followers_count"]
     foto = user["profile_image_url"]
+    protegido = user["protected"]
 
-    return User(id=id, nome=nome, username=username, bio=bio, cont_seguidores=cont_seguidores, cont_seguidos=cont_seguidos, foto=foto)
+    return User(id=id, nome=nome, username=username, bio=bio, cont_seguidores=cont_seguidores, cont_seguidos=cont_seguidos, foto=foto, protegido=protegido)
 
 def bearer_oauth(r):
     r.headers["Authorization"] = f"Bearer {bearer_token}"
@@ -132,20 +134,38 @@ def pesquisar_pagina(url, conexao, token="", tag=""):
 
     # print(json.dumps(json_response, indent=4, sort_keys=True))
 
-    # Guarda as infos dos seguidores no vetor do tipo (User)
-    for item in json_response["data"]:
-        user = User(id=item["id"], nome=item["name"], username=item["username"])
-        users.append(user)
+# for item in json_response["data"]:
+#
+# KeyError: 'data'
+# {
+# "errors": [
+#     {
+#         "detail": "Sorry, you are not authorized to see the user with id: [1500850517966311430].",
+#         "parameter": "id",
+#         "resource_id": "1500850517966311430",
+#         "resource_type": "user",
+#         "section": "data",
+#         "title": "Authorization Error",
+#         "type": "https://api.twitter.com/2/problems/not-authorized-for-resource",
+#         "value": "1500850517966311430"
+#     }
+# ]
+# } ERRO QUANDO O USER É PROTEGIDO! mesmo que eu já siga
+    if 'data' in json_response:
+        # Guarda as infos dos seguidores no vetor do tipo (User)
+        for item in json_response["data"]:
+            user = User(id=item["id"], nome=item["name"], username=item["username"])
+            users.append(user)
 
-    # Verifica se ês usuaries tem bio e coloca no BD, todes ês 100 de uma vez
-    users = levanta_infos_users(users)
-    users = adiciona_tags(users, tag)
-    adiciona_user_bd(users, conexao)
+        # Verifica se ês usuaries tem bio e coloca no BD, todes ês 100 de uma vez
+        users = levanta_infos_users(users)
+        users = adiciona_tags(users, tag)
+        adiciona_user_bd(users, conexao)
 
-    users.clear()
-    # Atualiza o URL para a solicitação da próxima página de seguidores
-    if 'next_token' in json_response["meta"]:
-        return json_response["meta"]["next_token"]
+        users.clear()
+        # Atualiza o URL para a solicitação da próxima página de seguidores
+        if 'next_token' in json_response["meta"]:
+            return json_response["meta"]["next_token"]
     return ""
 
 def pesquisar_com_paginas(url_base, conexao, token = "", tag = ""):
@@ -194,14 +214,20 @@ def pesquisa_rotina(arroba, conexao):
     pesquisar_seguidores(username_para_id(arroba), conexao)
     pesquisar_seguidos(username_para_id(arroba), conexao)
 
-def alimentar_bd(users):
+def alimentar_bd(users, conexao):
     for user in users:
-        pesquisa_rotina(user.username)
-        adiciona_pesquisade(user)
+        print("pesquisando ", user.username)
+        pesquisa_rotina(user.username, conexao)
+        print(user.username, "pesquisade!")
+        adiciona_pesquisade(user, conexao)
+
+# criar função própria
 def melhores_para_pesquisar(quantidade, conexao):
+
     users = baixa_user_bd(conexao)
+    pesquisades = baixa_pesquisades(conexao)
     pontuacoes = pontua_bios(users)
-    pontuacoes = filtra_relevantes(pontuacoes,pontuacao_min=7,filtro_porn=True,coerencia_min=0.0,pode_ja_seguidos=True)
+    pontuacoes = filtra_relevantes_para_pesquisar(pontuacoes, pesquisades)
     users.clear()
     for i in range(0, quantidade, 1):
         users.append(pontuacoes[i].user)
@@ -209,7 +235,7 @@ def melhores_para_pesquisar(quantidade, conexao):
 def melhores_para_seguir(quantidade, conexao):
     users = baixa_user_bd(conexao)
     pontuacoes = pontua_bios(users)
-    pontuacoes = filtra_relevantes(pontuacoes,pontuacao_min=10,filtro_porn=True,coerencia_min=0.0,pode_ja_seguidos=False)
+    pontuacoes = filtra_relevantes(pontuacoes,pontuacao_min=10,filtro_porn=True,coerencia_min=0.0)
     for i in range(0, quantidade, 1):
         logging.info(i+1, "https://www.twitter.com/" + pontuacoes[i].user.username)
     # Descobrir como mandar por email.

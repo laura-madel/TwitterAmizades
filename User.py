@@ -1,5 +1,5 @@
 class User:
-    def __init__(self, id="", nome="", username="", bio="", me_segue=False, eu_sigo=False, cont_seguidores=0,cont_seguidos=0,foto=""):
+    def __init__(self, id="", nome="", username="", bio="", me_segue=False, eu_sigo=False, cont_seguidores=0,cont_seguidos=0,foto="",protegido=""):
         self.id = id
         self.nome = nome
         self.username = username
@@ -9,6 +9,7 @@ class User:
         self.cont_seguidores = cont_seguidores
         self.cont_seguidos = cont_seguidos
         self.foto = foto
+        self.protegido = protegido
 class Pontuacao:
     def __init__(self, user:User, pontos=0, coerencia = 0, porn = False):
         self.user = user
