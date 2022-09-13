@@ -75,7 +75,7 @@ def atualiza_users_bd(users, db_connection):
 	for user in users:
 		# Se a bio for apagada, não atualiza ela.
 		if(user.bio != ""):
-			sql = ("update users set bio = %s, nome = %s, username = %s, me_segue = %s, eu_sigo = %s, cont_seguidores = %s, cont_seguidos = %s, foto = %s fechado = %s where id=%s")
+			sql = ("update users set bio = %s, nome = %s, username = %s, me_segue = %s, eu_sigo = %s, cont_seguidores = %s, cont_seguidos = %s, foto = %s, fechado = %s where id=%s")
 			values = (user.bio, user.nome, user.username, user.me_segue, user.eu_sigo, user.cont_seguidores, user.cont_seguidos, user.foto, user.protegido, user.id)
 		else:
 			sql = ("update users set nome = %s, username = %s, me_segue = %s, eu_sigo = %s, cont_seguidores = %s, cont_seguidos = %s, foto = %s where id=%s")

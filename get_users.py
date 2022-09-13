@@ -172,7 +172,7 @@ def pesquisar_com_paginas(url_base, conexao, token = "", tag = ""):
 
     while True:
         token = pesquisar_pagina(url_base, conexao, token, tag)
-        print("token: ", token)
+        logging.info("token: ", token)
         if token == "":
             break
 
@@ -188,13 +188,13 @@ def pesquisar_seguidores(id, conexao):
     else:
         tag = ""
     pesquisar_com_paginas(criar_url_seguidores(id), conexao, tag=tag)
-    print('pesquisa por seguidores concluida!')
+    logging.info('pesquisa por seguidores concluida!')
 def pesquisar_seguidos(id, conexao):
     tag = ""
     if id == MEU_ID:
         tag = "marcar_como_seguido"
     pesquisar_com_paginas(criar_url_seguides(id), conexao, tag=tag)
-    print('pesquisa por seguidos concluida!')
+    logging.info('pesquisa por seguidos concluida!')
 
 def pesquisar_seguidores_com_token(id, token, conexao):
     if id == MEU_ID:
@@ -202,14 +202,14 @@ def pesquisar_seguidores_com_token(id, token, conexao):
     else:
         tag = ""
     pesquisar_com_paginas(criar_url_seguidores(id), conexao, token=token, tag=tag)
-    print('pesquisa por seguidores com token concluida!')
+    logging.info('pesquisa por seguidores com token concluida!')
 
 def pesquisar_seguidos_com_token(id, token, conexao):
     tag = ""
     if id == MEU_ID:
         tag = "marcar_como_seguido"
     pesquisar_com_paginas(criar_url_seguides(id), conexao, token=token, tag=tag)
-    print('pesquisa por seguidos com token concluida!')
+    logging.info('pesquisa por seguidos com token concluida!')
 def pesquisa_rotina(arroba, conexao):
     pesquisar_seguidores(username_para_id(arroba), conexao)
     pesquisar_seguidos(username_para_id(arroba), conexao)
@@ -218,10 +218,9 @@ def alimentar_bd(users, conexao):
     for user in users:
         print("pesquisando ", user.username)
         pesquisa_rotina(user.username, conexao)
-        print(user.username, "pesquisade!")
         adiciona_pesquisade(user, conexao)
+        print(user.username, "pesquisade!")
 
-# criar função própria
 def melhores_para_pesquisar(quantidade, conexao):
 
     users = baixa_user_bd(conexao)
