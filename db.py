@@ -27,6 +27,7 @@ def desconectar_bd(db_connection):
 def baixa_user_bd(db_connection):
 	cursor = db_connection.cursor()
 	users : User = []
+	# TODO: Adicionar outros interesses
 	sql = "SELECT id, nome, bio, username FROM users WHERE bio NOT LIKE '%🔞%' AND nome NOT LIKE '%🔞%' AND (nome LIKE '%🌈%' OR bio LIKE '%🌈%' OR nome LIKE '%⚧%' OR bio LIKE '%⚧%' OR bio LIKE '%ele%' OR bio LIKE '%ela%' OR bio LIKE '%elu%' OR bio LIKE '%pronome%'OR bio LIKE '%UFPR%' OR bio LIKE '%trans%' OR bio LIKE '%travesti%' OR bio LIKE '%trava%');"
 	cursor.execute(sql)
 
@@ -66,10 +67,11 @@ def adiciona_user_bd(users, db_connection):
 		if(cursor.rowcount == 0):
 			atualiza_users_bd([user], db_connection)
 		else:
-			print("o registro de " + user.nome + " foi inserido.")
+			print("o registro de < " + user.nome + " > foi inserido.")
 	cursor.close()
 
 # TODO absurdo: me segue/eu sigo são opostos dicotomicos!!
+# TODO: essa funçao só pega um por vez mesmo? pra que o for?
 def atualiza_users_bd(users, db_connection):
 	cursor = db_connection.cursor()
 	for user in users:
@@ -81,7 +83,8 @@ def atualiza_users_bd(users, db_connection):
 			sql = ("update users set nome = %s, username = %s, me_segue = %s, eu_sigo = %s, cont_seguidores = %s, cont_seguidos = %s, foto = %s where id=%s")
 			values = (user.nome, user.username, user.me_segue, user.eu_sigo, user.cont_seguidores, user.cont_seguidos, user.foto, user.id)
 		cursor.execute(sql, values)
-	if cursor.rowcount != 0:
-		print(str(cursor.rowcount) + " registros foram atualizados.")
+		print("as infos de < "+ user.nome +" > foram atualizadas.")
+	# if cursor.rowcount != 0:
+	# 	print(str(cursor.rowcount) + " registros foram atualizados.")
 
 	cursor.close()

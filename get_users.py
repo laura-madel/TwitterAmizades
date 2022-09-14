@@ -132,7 +132,7 @@ def pesquisar_pagina(url, conexao, token="", tag=""):
     # Pesquisa os seguidores, 100 por vez
     json_response = connect_to_endpoint(url)
 
-    # print(json.dumps(json_response, indent=4, sort_keys=True))
+    print(json.dumps(json_response, indent=4, sort_keys=True))
 
 # for item in json_response["data"]:
 #
@@ -172,12 +172,13 @@ def pesquisar_com_paginas(url_base, conexao, token = "", tag = ""):
 
     while True:
         token = pesquisar_pagina(url_base, conexao, token, tag)
+        # TODO: indicar quanto falta pra terminar a pesquisa com o user, em %.
         logging.info("token: ", token)
         if token == "":
             break
 
         # Para o Twitter não bloquear, espera um tempo aleatório
-        espera(segundos=random.randint(60*4, 60*5))
+        espera(segundos=random.randint(60*5, 60*6))
 
         #! TODO: interromper sem erro quando acaba https://developer.twitter.com/en/docs/twitter-api/rate-limits
         # Exception: Request returned an error: 429 {"title":"Too Many Requests","detail":"Too Many Requests","type":"about:blank","status":429}
@@ -230,6 +231,7 @@ def melhores_para_pesquisar(quantidade, conexao):
     users.clear()
     for i in range(0, quantidade, 1):
         users.append(pontuacoes[i].user)
+    pontuacoes.clear()
     return users
 def melhores_para_seguir(quantidade, conexao):
     users = baixa_user_bd(conexao)

@@ -1,6 +1,8 @@
 from db import *
 import random
 
+# TODO: Bookstans e otakus pra q?
+
 PONTOS_TRANS = 8
 PONTOS_PRONOMES = 4
 PONTOS_ARCO_IRIS = 2
@@ -52,6 +54,8 @@ def filtra_relevantes(pontuacoes, pontuacao_min=0,filtro_porn=True,coerencia_min
     pontuacoes_filtradas.sort(reverse=True)
     return pontuacoes_filtradas
 
+# TODO: coerencia importa? remover
+# TODO: pesquisar só pessoas trans
 def filtra_relevantes_para_pesquisar(pontuacoes, pesquisades, pontuacao_min=0,filtro_porn=True,coerencia_min=0.0):
     pontuacoes_filtradas = []
     for pontuacao in pontuacoes:
@@ -82,6 +86,9 @@ def verifica_estudante(bio, nome):
     return 0
 
 # separar Direitos humanos
+
+# 👿
+
 def verifica_porn(bio, nome):
     if "porn" in bio or "porn" in nome or "+18" in bio or "+18" in nome or "NSFW" in bio or "NSFW" in nome:
         return True
