@@ -19,6 +19,8 @@ access_token_secret = os.getenv("ACCESS_TOKEN_SECRET")
 bearer_token = os.getenv("BEARER_TOKEN")
 
 MEU_ID = "1279200119129341952"
+TEMPO_MIN = 60*5
+TEMPO_MAX = 60*6
 
 def infos_de_interesse():
     return "name,username,description,public_metrics,profile_image_url,protected"
@@ -178,7 +180,7 @@ def pesquisar_com_paginas(url_base, conexao, token = "", tag = ""):
             break
         ##TODO: O primeiro tá pulando o tempo de espera??
         # Para o Twitter não bloquear, espera um tempo aleatório
-        espera(segundos=random.randint(60*5, 60*6))
+        espera(segundos=random.randint(TEMPO_MIN, TEMPO_MAX))
 
         #! TODO: interromper sem erro quando acaba https://developer.twitter.com/en/docs/twitter-api/rate-limits e mandar mensagem de erro no zap
         # Exception: Request returned an error: 429 {"title":"Too Many Requests","detail":"Too Many Requests","type":"about:blank","status":429}
@@ -213,6 +215,7 @@ def pesquisar_seguidos_com_token(id, token, conexao):
     logging.info('pesquisa por seguidos com token concluida!')
 def pesquisa_rotina(arroba, conexao):
     pesquisar_seguidores(username_para_id(arroba), conexao)
+    espera(segundos=random.randint(TEMPO_MIN, TEMPO_MAX))
     pesquisar_seguidos(username_para_id(arroba), conexao)
 
 def alimentar_bd(users, conexao):
@@ -238,5 +241,6 @@ def melhores_para_seguir(quantidade, conexao):
     pontuacoes = pontua_bios(users)
     pontuacoes = filtra_relevantes(pontuacoes,pontuacao_min=10,filtro_porn=True,coerencia_min=0.0)
     for i in range(0, quantidade, 1):
+
         logging.info(i+1, "https://www.twitter.com/" + pontuacoes[i].user.username)
     # Descobrir como mandar por email.

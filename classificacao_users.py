@@ -1,7 +1,7 @@
 from db import *
 import random
 
-# TODO: Bookstans e otakus pra q?
+# TODO: Bookstans e otakus pra q? hiragana katakana cancelado @pedipanol
 
 PONTOS_TRANS = 8
 PONTOS_PRONOMES = 4
