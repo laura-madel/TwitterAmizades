@@ -176,11 +176,11 @@ def pesquisar_com_paginas(url_base, conexao, token = "", tag = ""):
         logging.info("token: ", token)
         if token == "":
             break
-
+        ##TODO: O primeiro tá pulando o tempo de espera??
         # Para o Twitter não bloquear, espera um tempo aleatório
         espera(segundos=random.randint(60*5, 60*6))
 
-        #! TODO: interromper sem erro quando acaba https://developer.twitter.com/en/docs/twitter-api/rate-limits
+        #! TODO: interromper sem erro quando acaba https://developer.twitter.com/en/docs/twitter-api/rate-limits e mandar mensagem de erro no zap
         # Exception: Request returned an error: 429 {"title":"Too Many Requests","detail":"Too Many Requests","type":"about:blank","status":429}
 
 def pesquisar_seguidores(id, conexao):

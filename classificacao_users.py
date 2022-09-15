@@ -87,7 +87,7 @@ def verifica_estudante(bio, nome):
 
 # separar Direitos humanos
 
-# 👿
+# 👿 fandom
 
 def verifica_porn(bio, nome):
     if "porn" in bio or "porn" in nome or "+18" in bio or "+18" in nome or "NSFW" in bio or "NSFW" in nome:

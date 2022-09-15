@@ -1,21 +1,34 @@
+import sys
 from get_users import *
-#from whatsapp_business_api import WhatsappAPI
+from whatsapp_business_api import WhatsappAPI
+from dotenv import load_dotenv
+
+load_dotenv(verbose=True)  # Throws error if no .env file is found
+
+whatsapp_1 = os.getenv("WHATSAPP_1")
+whatsapp_2 = os.getenv("WHATSAPP_2")
+id_numero_telefone = os.getenv("ID_NUMERO_TELEFONE")
+token_acesso_zap = os.getenv("TOKEN_ACESSO_ZAP")
 
 if __name__ == '__main__':
 
+    # TODO cancelar outros processos desse codigo em python no servidor antes de recomeçar
+    quantidade_seguir = 3
+    quantidade_pesquisar = 3
+    w = WhatsappAPI(phone_number_id=id_numero_telefone, access_token=token_acesso_zap)
     conexao = conectar_bd()
-    # cancelar outros processos desse codigo em python no servidor antes de recomeçar
-    # melhores_para_seguir(36, conexao)
     # pesquisa_rotina("laura_madel_", conexao)
-    while True:
-        alimentar_bd(melhores_para_pesquisar(5, conexao), conexao)
+    alimentar_bd(melhores_para_pesquisar(quantidade_pesquisar, conexao), conexao)
+    quem_seguir = melhores_para_pesquisar(quantidade_seguir, conexao)
 
+    w.send_text_message(to=whatsapp_1, message='*Atenção para os @s de hoje:*')
+    w.send_text_message(to=whatsapp_2, message='*Atenção para os @s de hoje:*')
+    for i in range(0, quantidade_seguir, 1):
+        mensagem = str(i + 1) + " - twitter.com/" + quem_seguir[i].username
+        w.send_text_message(to=whatsapp_1, message=mensagem)
+        w.send_text_message(to=whatsapp_2, message=mensagem)
 
     desconectar_bd(conexao)
 
-    # phone_number_id = '103726292491399'
-    # access_token = 'EAANAKWTSJaYBABZBV58JgPmmvZCcxLRZBW0LRAQkhD9Vw4NkPe0vYCqTB5K1la0KgkLoIOkdE4zcKGNXhRZB1Iaswz8E6JP21fBlhodL4oIXqJ9Ivl5xBBxtI9Xxlmnz7JNdt7l6MZA6rqdi1aSpdG4yIiZBOSWkdCSiJJTITtq1A8ZC05qaPuSWZAqZAZAGnt9zbcEvo0mtlPiAZDZD'
-    #
-    # w = WhatsappAPI(phone_number_id=phone_number_id, access_token=access_token)
-    #
-    # w.send_text_message(to='5541988779000', message='This is a test!')
+    # TODO pra ver o resposta do chron no email
+    sys.exit(0)
