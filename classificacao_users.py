@@ -33,7 +33,6 @@ def pontua_bios(users):
             incoerencia = incoerencia/10.0
         else:
             incoerencia = 1
-        incoerencia = random.random()
 
         coerencia = 1.0 - incoerencia
 
@@ -41,10 +40,12 @@ def pontua_bios(users):
 
         pontuacoes.append(Pontuacao(user, pontos=pontos, coerencia=coerencia, porn=porn))
 
+    users.clear()
     pontuacoes.sort(reverse=True)
 
     return pontuacoes
 
+# TODO: precisa de pontuação mínima? ele já ordena por pontos
 def filtra_relevantes(pontuacoes, pontuacao_min=0,filtro_porn=True,coerencia_min=0.0):
     pontuacoes_filtradas = []
     for pontuacao in pontuacoes:
@@ -85,26 +86,40 @@ def verifica_estudante(bio, nome):
         return PONTOS_ESTUDANTE
     return 0
 
-# separar Direitos humanos
+# separar Direitos humanos / genero / nb / não binária/e/o
 
 # 👿 fandom
 
+# 🔞 TODO: colocar uma etiqueta no verifica_porn para não excluir e enviar por zap com um aviso
 def verifica_porn(bio, nome):
     if "porn" in bio or "porn" in nome or "+18" in bio or "+18" in nome or "NSFW" in bio or "NSFW" in nome:
         return True
     return False
 
 # Quanto maior esse índice maior a diferença entre seguidos e seguidores
-def verifica_proporcao_seguidores(elu_segue, elu_eh_seguide):
-    return abs(elu_segue - elu_eh_seguide) / 100.0
+def verifica_proporcao_seguidores(elu_segue : int, elu_eh_seguide : int):
+    if elu_segue is not None and elu_eh_seguide is not None:
+        diferença = abs(elu_segue - elu_eh_seguide)
+    else:
+        # TODO inverter a lógica para poder mandar 0 aqui
+        diferença = 100
+    return diferença / 100.0
 
 # TODO ver @eu_robertamrn e @FosterOliver_of
 # se o perfil for fechado, os contadores de seguides/seguidores são null
 
 # Quanto maior mais longe do ideal
 def verifica_quantidade_seguidores(elu_eh_seguide):
-    return abs(elu_eh_seguide - QUANT_IDEAL_SEGUIDORES) / 100.0
+    if elu_eh_seguide is not None:
+        diferença = abs(elu_eh_seguide - QUANT_IDEAL_SEGUIDORES)
+    else:
+        diferença = 100
+    return diferença / 100.0
 
 # Quanto maior mais longe do ideal
 def verifica_quantidade_seguidos(elu_segue):
-    return abs(elu_segue - QUANT_IDEAL_SEGUIDOS) / 100.0
+    if elu_segue is not None:
+        diferença = abs(elu_segue - QUANT_IDEAL_SEGUIDOS)
+    else:
+        diferença = 100
+    return diferença / 100.0

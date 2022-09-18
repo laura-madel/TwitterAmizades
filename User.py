@@ -1,7 +1,8 @@
 class User:
-    def __init__(self, id="", nome="", username="", bio="", me_segue=False, eu_sigo=False, cont_seguidores=0,cont_seguidos=0,foto="",protegido=""):
+    def __init__(self, id="", nome="", username="", bio="", me_segue=False, eu_sigo=False, cont_seguidores=0, cont_seguidos=0,foto="",protegido=""):
         self.id = id
         self.nome = nome
+        # TODO: refatorar para arroba
         self.username = username
         self.bio = bio
         self.me_segue = me_segue

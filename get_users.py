@@ -136,23 +136,6 @@ def pesquisar_pagina(url, conexao, token="", tag=""):
 
     print(json.dumps(json_response, indent=4, sort_keys=True))
 
-# for item in json_response["data"]:
-#
-# KeyError: 'data'
-# {
-# "errors": [
-#     {
-#         "detail": "Sorry, you are not authorized to see the user with id: [1500850517966311430].",
-#         "parameter": "id",
-#         "resource_id": "1500850517966311430",
-#         "resource_type": "user",
-#         "section": "data",
-#         "title": "Authorization Error",
-#         "type": "https://api.twitter.com/2/problems/not-authorized-for-resource",
-#         "value": "1500850517966311430"
-#     }
-# ]
-# } ERRO QUANDO O USER É PROTEGIDO! mesmo que eu já siga
     if 'data' in json_response:
         # Guarda as infos dos seguidores no vetor do tipo (User)
         for item in json_response["data"]:
@@ -168,6 +151,9 @@ def pesquisar_pagina(url, conexao, token="", tag=""):
         # Atualiza o URL para a solicitação da próxima página de seguidores
         if 'next_token' in json_response["meta"]:
             return json_response["meta"]["next_token"]
+        #TODO : definitivamente não é a melhor forma
+    elif "errors" in json_response:
+        return "erro"
     return ""
 
 def pesquisar_com_paginas(url_base, conexao, token = "", tag = ""):
@@ -177,7 +163,9 @@ def pesquisar_com_paginas(url_base, conexao, token = "", tag = ""):
         # TODO: indicar quanto falta pra terminar a pesquisa com o user, em %.
         logging.info("token: ", token)
         if token == "":
-            break
+            return True
+        if token == "erro":
+            return False
         ##TODO: O primeiro tá pulando o tempo de espera??
         # Para o Twitter não bloquear, espera um tempo aleatório
         espera(segundos=random.randint(TEMPO_MIN, TEMPO_MAX))
@@ -190,14 +178,14 @@ def pesquisar_seguidores(id, conexao):
         tag = "marcar_como_seguidor"
     else:
         tag = ""
-    pesquisar_com_paginas(criar_url_seguidores(id), conexao, tag=tag)
-    logging.info('pesquisa por seguidores concluida!')
+    sucesso = pesquisar_com_paginas(criar_url_seguidores(id), conexao, tag=tag)
+    return sucesso
 def pesquisar_seguidos(id, conexao):
     tag = ""
     if id == MEU_ID:
         tag = "marcar_como_seguido"
-    pesquisar_com_paginas(criar_url_seguides(id), conexao, tag=tag)
-    logging.info('pesquisa por seguidos concluida!')
+    sucesso = pesquisar_com_paginas(criar_url_seguides(id), conexao, tag=tag)
+    return sucesso
 
 def pesquisar_seguidores_com_token(id, token, conexao):
     if id == MEU_ID:
@@ -214,15 +202,32 @@ def pesquisar_seguidos_com_token(id, token, conexao):
     pesquisar_com_paginas(criar_url_seguides(id), conexao, token=token, tag=tag)
     logging.info('pesquisa por seguidos com token concluida!')
 def pesquisa_rotina(arroba, conexao):
-    pesquisar_seguidores(username_para_id(arroba), conexao)
+    sucesso = pesquisar_seguidores(username_para_id(arroba), conexao)
+    if sucesso:
+        print('pesquisa por seguidores concluida!')
+        espera(segundos=random.randint(TEMPO_MIN, TEMPO_MAX))
+        sucesso = pesquisar_seguidos(username_para_id(arroba), conexao)
+        if sucesso:
+            print('pesquisa por seguides concluida!')
+        else:
+            print('Erro na pesquisa de seguides deste usuário')
+
+    else:
+        print('Erro na pesquisa de seguidores deste usuário')
     espera(segundos=random.randint(TEMPO_MIN, TEMPO_MAX))
+    return sucesso
+
+def atualizar_seguides(arroba, conexao):
     pesquisar_seguidos(username_para_id(arroba), conexao)
+    espera(segundos=random.randint(TEMPO_MIN, TEMPO_MAX))
 
 def alimentar_bd(users, conexao):
     for user in users:
+        inicia_pesquisa_bd(user, conexao)
         print("pesquisando ", user.username)
-        pesquisa_rotina(user.username, conexao)
-        adiciona_pesquisade(user, conexao)
+        sucesso = pesquisa_rotina(user.username, conexao)
+        if sucesso:
+            conclui_pesquisa_bd(user, conexao)
         print(user.username, "pesquisade!")
 
 def melhores_para_pesquisar(quantidade, conexao):
@@ -239,8 +244,11 @@ def melhores_para_pesquisar(quantidade, conexao):
 def melhores_para_seguir(quantidade, conexao):
     users = baixa_user_bd(conexao)
     pontuacoes = pontua_bios(users)
-    pontuacoes = filtra_relevantes(pontuacoes,pontuacao_min=10,filtro_porn=True,coerencia_min=0.0)
+    pontuacoes = filtra_relevantes(pontuacoes,pontuacao_min=10,filtro_porn=True,coerencia_min=0.5)
+    users.clear()
     for i in range(0, quantidade, 1):
-
-        logging.info(i+1, "https://www.twitter.com/" + pontuacoes[i].user.username)
+        users.append(pontuacoes[i].user)
+        print(i, pontuacoes[i].user.username, pontuacoes[i].pontos, pontuacoes[i].coerencia)
+    pontuacoes.clear()
+    return users
     # Descobrir como mandar por email.
