@@ -48,8 +48,7 @@ def escreve_sql_select_usuaries(variaveis, interesses, proibidos, pronomes):
 
 	if pronomes:
 		for pronome in pronomes:
-			pronomes_aux.append(
-				"bio REGEXP '[0-9🏳️‍⚧️\
+			pronomes_aux.append("bio REGEXP '[0-9🏳️‍⚧️\
  °:(){}&.,?!''/|<>-]" + pronome + "' OR bio REGEXP '^" + pronome + "' OR nome REGEXP '[0-9🏳️‍⚧️\
  °:(){}&.,?!''/|<>-]" + pronome + "'")
 		sql += " OR " + ' OR '.join(pronomes_aux)
@@ -76,9 +75,9 @@ def baixa_usuaries_bd(conexao_bd):
 	usuaries : Usuarie = []
 
 	variaveis = ["id", "nome", "bio", "arroba", "eu_sigo", "cont_seguidores", "cont_seguides", "protegide", "local", "url"]
-	interesses = ["🌈", "⚧", "gênero", "nb", "pronome", "UFPR", "trans", "travesti", "trava", "travesty", "ativista", "LGBT"]
+	interesses = ["🌈", "⚧", "gênero", "nb", "pronome", "UFPR", "trans", "travest", "trava", "ativista", "LGBT"]
 	pronomes = ["ela", "ele", "elu"]
-	proibidos = ["🔞", "😈", "NSFW", "only", "📚", "📖", "book", "otak", "anime", "fandom", "game", "play", "🎮", "jog"]
+	proibidos = ["🔞", "😈", "NSFW", "sex", "only", "📚", "📖", "book", "otak", "anime", "fandom", "game", "play", "🎮", "jog"]
 
 	cursor.execute(escreve_sql_select_usuaries(variaveis, interesses, proibidos, pronomes))
 	print(0)

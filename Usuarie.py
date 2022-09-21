@@ -15,13 +15,9 @@ class Usuarie:
         self.url = url
         self.verificade = verificade
 class Pontuacao:
-    def __init__(self, usuarie:Usuarie, pontos=0, coerencia = 0, porn = False):
+    def __init__(self, usuarie:Usuarie, pontos=0):
         self.usuarie = usuarie
         self.pontos = pontos
-        self.coerencia = coerencia
-        self.porn = porn
 
     def __lt__(self, other):
-        if self.pontos == other.pontos:
-            return self.coerencia < other.coerencia
         return self.pontos < other.pontos

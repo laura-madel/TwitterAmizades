@@ -1,5 +1,7 @@
 import os
 import requests
+import random
+import time
 
 from dotenv import load_dotenv
 load_dotenv(verbose=True)  # Throws error if no .env file is found
@@ -10,21 +12,39 @@ consumer_secret = os.getenv("CONSUMER_SECRET")
 access_token = os.getenv("ACCESS_TOKEN")
 access_token_secret = os.getenv("ACCESS_TOKEN_SECRET")
 bearer_token = os.getenv("BEARER_TOKEN")
+meu_id_twitter = os.getenv("MEU_ID_TWITTER")
+
+TEMPO_MIN_ESPERA = 270
+TEMPO_MAX_ESPERA = 330
+
+def espera():
+    segundos = random.randint(TEMPO_MIN_ESPERA, TEMPO_MAX_ESPERA)
+    while segundos > 0:
+        time.sleep(1)
+        if segundos % 2 == 0:
+            print(str(segundos), "-----+")
+        else:
+            print(str(segundos))
+        segundos = segundos - 1
 
 def bearer_oauth(r):
     r.headers["Authorization"] = f"Bearer {bearer_token}"
     r.headers["User-Agent"] = "v2UserLookupPython"
     return r
 
-
+# TODO: esse erro está parando o código! sem aviso = sem erro kkkkkjjjjjj
 def connect_to_endpoint(url):
     response = requests.request("GET", url, auth=bearer_oauth,)
     if response.status_code != 200:
-        raise Exception(
-            "Request returned an error: {} {}".format(
-                response.status_code, response.text
-            )
-        )
+        espera()
+        connect_to_endpoint(url)
+        # raise Exception(
+        #     "Request returned an error: {} {}".format(
+        #         response.status_code, response.text
+        #     )
+        # )
+        #! TODO: interromper sem erro quando acaba https://developer.twitter.com/en/docs/twitter-api/rate-limits e mandar mensagem de erro no zap
+        # Exception: Request returned an error: 429 {"title":"Too Many Requests","detail":"Too Many Requests","type":"about:blank","status":429}
     return response.json()
 
 def infos_de_interesse():
@@ -48,6 +68,12 @@ def criar_url_seguidores(usuarie):
 
 def criar_url_seguides(usuarie):
     return "https://api.twitter.com/2/users/{}/following".format(usuarie.id)
+
+def criar_url_meus_seguidores():
+    return "https://api.twitter.com/2/users/{}/followers".format(meu_id_twitter)
+
+def criar_url_meus_seguides():
+    return "https://api.twitter.com/2/users/{}/following".format(meu_id_twitter)
 
 def unshorten_url(url):
     if url == "":
